@@ -1,0 +1,70 @@
+name: 'Turbo Token'
+description: 'Exchange a GitHub OIDC token for a turbo CLI access token.'
+author: 'Vercel'
+branding:
+  icon: 'key'
+  color: 'black'
+
+inputs:
+  team-id:
+    description: 'Vercel team ID (e.g., "team_123…")'
+    required: true
+  audience:
+    description: "Custom audience to use (must match your Vercel team's OIDC policy)"
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Exchange GitHub OIDC token for Vercel access token
+      shell: bash
+      env:
+        VERCEL_CLIENT_ID: cl_kyUx2zVvA4MGptBohkmtYHJly2XltXzD
+        VERCEL_TEAM_ID: ${{ inputs.team-id }}
+        OIDC_AUDIENCE: ${{ inputs.audience }}
+      run: |
+        set -euo pipefail
+
+        if [[ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" || -z "${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-}" ]]; then
+          echo "::error::OIDC environment variables are missing. The calling job needs \"permissions: id-token: write\"."
+          exit 1
+        fi
+
+        # Suitable for the two responses below (GitHub OIDC, Vercel token
+        # exchange) where the value cannot contain escaped quotes.
+        json_field() {
+          tr -d '\n\r\t' | sed -nE "s/.*\"$1\" *: *\"([^\"]*)\".*/\1/p"
+        }
+
+        audience_args=()
+        if [[ -n "${OIDC_AUDIENCE:-}" ]]; then
+          audience_args=(--data-urlencode "audience=$OIDC_AUDIENCE")
+        fi
+
+        oidc_token=$(curl -sS -f -G \
+          -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+          "${audience_args[@]}" \
+          "$ACTIONS_ID_TOKEN_REQUEST_URL" \
+          | json_field value)
+        if [[ -z "$oidc_token" || "$oidc_token" == "null" ]]; then
+          echo "::error::Failed to obtain GitHub OIDC ID token"
+          exit 1
+        fi
+        echo "::add-mask::$oidc_token"
+
+        access_token=$(curl -sS -f -X POST https://api.vercel.com/login/oauth/token \
+          --data "grant_type=urn:ietf:params:oauth:grant-type:token-exchange" \
+          --data "client_id=$VERCEL_CLIENT_ID" \
+          --data "subject_token_type=urn:ietf:params:oauth:token-type:id_token" \
+          --data "requested_token_type=urn:ietf:params:oauth:token-type:access_token" \
+          --data "team_id=$VERCEL_TEAM_ID" \
+          --data-urlencode "subject_token=$oidc_token" \
+          | json_field access_token)
+        if [[ -z "$access_token" || "$access_token" == "null" ]]; then
+          echo "::error::Failed to exchange OIDC token for Vercel access token"
+          exit 1
+        fi
+        echo "::add-mask::$access_token"
+
+        echo "TURBO_TOKEN=$access_token" >> "$GITHUB_ENV"
+        echo "TURBO_TEAM=$VERCEL_TEAM_ID" >> "$GITHUB_ENV"
