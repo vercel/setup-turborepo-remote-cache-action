@@ -74,4 +74,4 @@ claim. This must match your Vercel team's `turbo` OIDC policy.
 
 ## License
 
-[MIT](https://github.com/vercel/turbo-token-action/blob/main/LICENSE?raw=true)
+[MIT](https://github.com/vercel/turbo-token-action/blob/main/LICENSE)
