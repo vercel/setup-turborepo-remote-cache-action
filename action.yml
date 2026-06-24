@@ -1,5 +1,5 @@
-name: 'Turbo Token'
-description: 'Exchange a GitHub OIDC token for a turbo CLI access token.'
+name: 'Setup Turborepo Remote Cache'
+description: 'Exchange a GitHub OIDC token for a Turborepo CLI access token.'
 author: 'Vercel'
 branding:
   icon: 'key'
