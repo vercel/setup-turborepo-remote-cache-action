@@ -24,7 +24,7 @@ On vercel.com,
      - You can optionally restrict to a workflow or branch, and customize the
        audience
 
-<img width="320" src="https://github.com/vercel/setup-turborepo-remote-cache-action/blob/main/images/add-turbo-oidc-policy.png?raw=true">
+<img width="320" src="https://github.com/vercel/setup-turborepo-remote-cache-action/blob/main/images/add-turbo-oidc-policy.png">
 
 ### 2. Add this action to your GitHub Workflow(s)
 
