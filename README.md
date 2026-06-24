@@ -1,18 +1,18 @@
-# turbo-token-action
+# setup-turborepo-remote-cache-action
 
-GitHub Action to exchange a GitHub OIDC token for a `turbo` CLI access token.
-Enables Remote Caching in GitHub Workflows, without requiring a personal access
-token.
+GitHub Action to exchange to setup Turborepo CLI
+[Remote Caching](https://vercel.com/docs/monorepos/remote-caching) in GitHub
+Workflows.
 
 ## Usage
 
 In order to use this action, you need to
 
-1. create a `turbo` CLI OIDC policy on your team for the GitHub Workflow(s) you
-   want to enable caching on
-2. add this action to your GitHub Workflow(s), before calling `turbo`
+1. create a Turborepo CLI OIDC policy on your team for the GitHub Workflow(s)
+   you want to enable caching on
+2. add this action to your GitHub Workflow(s), before calling Turborepo CLI
 
-### 1. Create a `turbo` CLI OIDC policy
+### 1. Create a Turborepo CLI OIDC policy
 
 On vercel.com,
 
@@ -24,7 +24,7 @@ On vercel.com,
      - You can optionally restrict to a workflow or branch, and customize the
        audience
 
-<img width="320" src="https://github.com/vercel/turbo-token-action/blob/main/images/add-turbo-oidc-policy.png?raw=true">
+<img width="320" src="https://github.com/vercel/setup-turborepo-remote-cache-action/blob/main/images/add-turbo-oidc-policy.png?raw=true">
 
 ### 2. Add this action to your GitHub Workflow(s)
 
@@ -36,17 +36,17 @@ permissions:
   id-token: write
 ```
 
-Then, call the action before invoking `turbo`:
+Then, call the action before invoking Turborepo CLI:
 
 ```yaml
-- uses: vercel/turbo-token-action@v1
+- uses: vercel/setup-turborepo-remote-cache-action@v1
   with:
     team-id: team_123…
 
 - run: turbo build
 ```
 
-You can tell it's working if the action succeeds and `turbo` logs
+You can tell it's working if the action succeeds and Turborepo CLI logs
 
 ```
    • Remote caching enabled
@@ -61,17 +61,18 @@ You can tell it's working if the action succeeds and `turbo` logs
 ### `audience`
 
 **Optional.** A custom audience to include in your GitHub OIDC token's `aud`
-claim. This must match your Vercel team's `turbo` OIDC policy.
+claim. This must match your Vercel team's Turborepo CLI OIDC policy.
 
 ## How it works
 
-1. You create a `turbo` CLI OIDC policy on your team, which recognizes GitHub
+1. You create a Turborepo CLI OIDC policy on your team, which recognizes GitHub
    OIDC tokens belonging to your GitHub Workflow(s)
 2. Then, this action generates a GitHub OIDC token, exchanges it for a
-   short-lived `turbo` CLI access token
+   short-lived Turborepo CLI access token
 3. Finally, this action sets the `TURBO_TEAM` and `TURBO_TOKEN` environment
-   variables, so that subsequent calls to `turbo` have Remote Caching enabled
+   variables, so that subsequent calls to Turborepo CLI have Remote Caching
+   enabled
 
 ## License
 
-[MIT](https://github.com/vercel/turbo-token-action/blob/main/LICENSE)
+[MIT](https://github.com/vercel/setup-turborepo-remote-cache-action/blob/main/LICENSE)
