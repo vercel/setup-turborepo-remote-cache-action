@@ -1,6 +1,6 @@
 # setup-turborepo-remote-cache-action
 
-GitHub Action to exchange to setup Turborepo CLI
+GitHub Action to setup Turborepo CLI
 [Remote Caching](https://vercel.com/docs/monorepos/remote-caching) in GitHub
 Workflows.
 
