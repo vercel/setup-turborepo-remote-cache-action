@@ -65,8 +65,9 @@ You can tell it's working if the action succeeds and Turborepo CLI logs
    • Remote caching enabled
 ```
 
-> If more than one of your team's OIDC policies could match this workflow,
-> pass the policy ID with the `policy` input to disambiguate.
+> If more than one of your team's OIDC policies could match this workflow, you
+> will receive an error. Pass the policy ID with the `policy` input to
+> disambiguate.
 
 ## Inputs
 
