@@ -6,11 +6,14 @@ branding:
   color: 'black'
 
 inputs:
-  team-id:
-    description: 'Vercel team ID (e.g., "team_123…")'
+  team:
+    description: 'Vercel team ID or slug (e.g., "team_123…" or "my-team")'
     required: true
   audience:
     description: "Custom audience to use (must match your Vercel team's OIDC policy)"
+    required: false
+  policy:
+    description: "OIDC policy ID to use (disambiguates when more than one of your team's policies could match the OIDC token)"
     required: false
 
 runs:
@@ -19,9 +22,10 @@ runs:
     - name: Exchange GitHub OIDC token for Vercel access token
       shell: bash
       env:
-        VERCEL_CLIENT_ID: cl_kyUx2zVvA4MGptBohkmtYHJly2XltXzD
-        VERCEL_TEAM_ID: ${{ inputs.team-id }}
-        OIDC_AUDIENCE: ${{ inputs.audience }}
+        TURBO_APP_ID: cl_kyUx2zVvA4MGptBohkmtYHJly2XltXzD
+        TURBO_TEAM: ${{ inputs.team }}
+        AUDIENCE: ${{ inputs.audience }}
+        POLICY_ID: ${{ inputs.policy }}
       run: |
         set -euo pipefail
 
@@ -37,8 +41,8 @@ runs:
         }
 
         audience_args=()
-        if [[ -n "${OIDC_AUDIENCE:-}" ]]; then
-          audience_args=(--data-urlencode "audience=$OIDC_AUDIENCE")
+        if [[ -n "${AUDIENCE:-}" ]]; then
+          audience_args=(--data-urlencode "audience=$AUDIENCE")
         fi
 
         oidc_token=$(curl -sS -f -G \
@@ -52,12 +56,18 @@ runs:
         fi
         echo "::add-mask::$oidc_token"
 
+        policy_args=()
+        if [[ -n "${POLICY_ID:-}" ]]; then
+          policy_args=(--data-urlencode "policy_id=$POLICY_ID")
+        fi
+
         access_token=$(curl -sS -f -X POST https://api.vercel.com/login/oauth/token \
           --data "grant_type=urn:ietf:params:oauth:grant-type:token-exchange" \
-          --data "client_id=$VERCEL_CLIENT_ID" \
+          --data "client_id=$TURBO_APP_ID" \
           --data "subject_token_type=urn:ietf:params:oauth:token-type:id_token" \
           --data "requested_token_type=urn:ietf:params:oauth:token-type:access_token" \
-          --data "team_id=$VERCEL_TEAM_ID" \
+          --data-urlencode "team_id_or_slug=$TURBO_TEAM" \
+          "${policy_args[@]}" \
           --data-urlencode "subject_token=$oidc_token" \
           | json_field access_token)
         if [[ -z "$access_token" || "$access_token" == "null" ]]; then
@@ -67,4 +77,4 @@ runs:
         echo "::add-mask::$access_token"
 
         echo "TURBO_TOKEN=$access_token" >> "$GITHUB_ENV"
-        echo "TURBO_TEAM=$VERCEL_TEAM_ID" >> "$GITHUB_ENV"
+        echo "TURBO_TEAM=$TURBO_TEAM" >> "$GITHUB_ENV"

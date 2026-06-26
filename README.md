@@ -41,7 +41,7 @@ Then, call the action before invoking Turborepo CLI:
 ```yaml
 - uses: vercel/setup-turborepo-remote-cache-action@v1
   with:
-    team-id: team_123…
+    team: my-team
 
 - run: turbo build
 ```
@@ -54,14 +54,20 @@ You can tell it's working if the action succeeds and Turborepo CLI logs
 
 ## Inputs
 
-### `team-id`
+### `team`
 
-**Required.** The Vercel team ID you want to use Remote Caching with.
+**Required.** The Vercel team ID or slug you want to use Remote Caching with.
 
 ### `audience`
 
 **Optional.** A custom audience to include in your GitHub OIDC token's `aud`
 claim. This must match your Vercel team's Turborepo CLI OIDC policy.
+
+### `policy`
+
+**Optional.** The ID of the Turborepo CLI OIDC policy to use. Set this when
+more than one of your team's policies could match the GitHub OIDC token, so
+that the token exchange can pick the intended policy unambiguously.
 
 ## How it works
 
