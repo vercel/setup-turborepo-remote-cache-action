@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: ./
         with:
-          team: ${{ vars.TEAM_ID }}
+          team: ${{ vars.TURBO_TEAM }}
       - name: Verify env exported
         shell: bash
         run: |
@@ -36,7 +36,7 @@ jobs:
             echo "::error::TURBO_TOKEN was not set"
             exit 1
           fi
-          if [[ "${TURBO_TEAM:-}" != "${{ vars.TEAM_ID }}" ]]; then
+          if [[ "${TURBO_TEAM:-}" != "${{ vars.TURBO_TEAM }}" ]]; then
             echo "::error::TURBO_TEAM mismatch"
             exit 1
           fi
