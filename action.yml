@@ -47,7 +47,7 @@ runs:
 
         oidc_token=$(curl -sS -f -G \
           -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-          "${audience_args[@]}" \
+          ${audience_args[@]+"${audience_args[@]}"} \
           "$ACTIONS_ID_TOKEN_REQUEST_URL" \
           | json_field value)
         if [[ -z "$oidc_token" || "$oidc_token" == "null" ]]; then
@@ -67,7 +67,7 @@ runs:
           --data "subject_token_type=urn:ietf:params:oauth:token-type:id_token" \
           --data "requested_token_type=urn:ietf:params:oauth:token-type:access_token" \
           --data-urlencode "team_id_or_slug=$TURBO_TEAM" \
-          "${policy_args[@]}" \
+          ${policy_args[@]+"${policy_args[@]}"} \
           --data-urlencode "subject_token=$oidc_token" \
           | json_field access_token)
         if [[ -z "$access_token" || "$access_token" == "null" ]]; then
