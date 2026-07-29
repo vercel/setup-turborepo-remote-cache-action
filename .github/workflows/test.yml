@@ -16,18 +16,31 @@ permissions:
 
 jobs:
   end-to-end:
-    name: End-to-End
+    name: End-to-End (${{ matrix.name }})
     runs-on: ubuntu-latest
-    # Forks don't get id-token: write on PRs; skip there.
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login == github.event.pull_request.base.repo.owner.login
+    if: >-
+      github.event_name != 'pull_request' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+       contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.pull_request.author_association))
     permissions:
       contents: read
       id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: without policy id
+            policy: ""
+          - name: with policy id
+            policy: pol_b160688a-e5a6-4de4-9939-4723872a5e97
     steps:
       - uses: actions/checkout@v5
-      - uses: ./
+      - name: Exchange OIDC token for Vercel access token
+        uses: ./
         with:
-          team-id: ${{ vars.TEAM_ID }}
+          team: ${{ vars.TURBO_TEAM }}
+          audience: https://github.com/vercel
+          policy: ${{ matrix.policy }}
       - name: Verify env exported
         shell: bash
         run: |
@@ -36,7 +49,8 @@ jobs:
             echo "::error::TURBO_TOKEN was not set"
             exit 1
           fi
-          if [[ "${TURBO_TEAM:-}" != "${{ vars.TEAM_ID }}" ]]; then
-            echo "::error::TURBO_TEAM mismatch"
+          if [[ "${TURBO_TEAM:-}" != "${{ vars.TURBO_TEAM }}" ]]; then
+            echo "::error::TURBO_TEAM mismatch (got '${TURBO_TEAM:-}', expected '${{ vars.TURBO_TEAM }}')"
             exit 1
           fi
+          echo "OIDC exchange succeeded and env vars were exported."
