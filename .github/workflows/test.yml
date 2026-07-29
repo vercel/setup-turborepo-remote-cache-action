@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   end-to-end:
-    name: End-to-End (${{ matrix.name }})
+    name: ${{ matrix.name }}
     runs-on: ubuntu-latest
     if: >-
       github.event_name != 'pull_request' ||
@@ -29,9 +29,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: without policy id
+          - name: E2E w/out policy ID
             policy: ""
-          - name: with policy id
+          - name: E2E w/ policy ID
             policy: pol_b160688a-e5a6-4de4-9939-4723872a5e97
     steps:
       - uses: actions/checkout@v5
