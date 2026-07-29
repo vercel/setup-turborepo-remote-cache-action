@@ -46,6 +46,7 @@ runs:
         fi
 
         oidc_token=$(curl -sS -f -G \
+          --retry 3 --retry-connrefused --max-time 30 \
           -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
           ${audience_args[@]+"${audience_args[@]}"} \
           "$ACTIONS_ID_TOKEN_REQUEST_URL" \
@@ -62,6 +63,7 @@ runs:
         fi
 
         access_token=$(curl -sS -f -X POST https://api.vercel.com/login/oauth/token \
+          --retry 3 --retry-connrefused --max-time 30 \
           --data "grant_type=urn:ietf:params:oauth:grant-type:token-exchange" \
           --data "client_id=$TURBO_APP_ID" \
           --data "subject_token_type=urn:ietf:params:oauth:token-type:id_token" \
