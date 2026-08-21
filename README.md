@@ -91,15 +91,45 @@ claim. This must match your Vercel team's Turborepo CLI OIDC policy.
 more than one of your team's policies could match the GitHub OIDC token, so
 that the token exchange can pick the intended policy unambiguously.
 
+### `revoke`
+
+**Optional.** Defaults to `true`. Whether to revoke the Turborepo access token
+when the job finishes, so that it stops working even before it would expire on
+its own. Revocation runs at the end of the job whether it succeeded or failed.
+
+Set it to `false` if you need the token to stay valid past the end of the job:
+
+```yaml
+- uses: vercel/setup-turborepo-remote-cache-action@v1.0.0
+  with:
+    team: ${{ vars.TURBO_TEAM }}
+    revoke: false
+```
+
+> If revocation fails, the action logs a warning rather than failing your job.
+> The token remains short-lived either way.
+
 ## How it works
 
 1. You create a Turborepo CLI OIDC policy on your team, which recognizes GitHub
    OIDC tokens belonging to your GitHub Workflow(s)
 2. Then, this action generates a GitHub OIDC token, exchanges it for a
    short-lived Turborepo CLI access token
-3. Finally, this action sets the `TURBO_TEAM` and `TURBO_TOKEN` environment
+3. Then, this action sets the `TURBO_TEAM` and `TURBO_TOKEN` environment
    variables, so that subsequent calls to Turborepo CLI have Remote Caching
    enabled
+4. Finally, when the job finishes, this action revokes the access token, unless
+   you set the [`revoke`](#revoke) input to `false`
+
+## Development
+
+The action runs on `node24` (a JavaScript action, so that it can revoke the
+token in a `post` step). It has no dependencies and no build step: `dist/`
+contains hand-written ES modules that GitHub Actions runs directly.
+
+- `dist/main.mjs` — token exchange, runs before your other steps
+- `dist/post.mjs` — revocation, runs at the end of the job
+- `dist/lib.mjs` — shared helpers
 
 ## License
 
