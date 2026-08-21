@@ -54,3 +54,55 @@ jobs:
             exit 1
           fi
           echo "OIDC exchange succeeded and env vars were exported."
+      - name: Verify token is active
+        shell: bash
+        run: |
+          set -euo pipefail
+          active=$(curl -sS -f -X POST https://api.vercel.com/login/oauth/token/introspect \
+            --retry 3 --retry-connrefused --max-time 30 \
+            --data-urlencode "token=$TURBO_TOKEN" \
+            | sed -nE 's/.*"active" *: *(true|false).*/\1/p')
+          if [[ "$active" != "true" ]]; then
+            echo "::error::Expected the access token to be active, got '$active'"
+            exit 1
+          fi
+          echo "Access token is active."
+
+  revocation:
+    name: E2E revocation
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name != 'pull_request' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+       contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.pull_request.author_association))
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v5
+      - name: Exchange OIDC token for Vercel access token
+        uses: ./
+        with:
+          team: ${{ vars.TURBO_TEAM }}
+          audience: https://github.com/vercel
+          # Revoke explicitly below instead, so this job can assert the result.
+          revoke: false
+      - name: Revoke the token and verify it is inactive
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -sS -f -X POST https://api.vercel.com/login/oauth/token/revoke \
+            --retry 3 --retry-connrefused --max-time 30 \
+            --data "client_id=cl_kyUx2zVvA4MGptBohkmtYHJly2XltXzD" \
+            --data "token_type_hint=access_token" \
+            --data-urlencode "token=$TURBO_TOKEN" \
+            --output /dev/null
+          active=$(curl -sS -f -X POST https://api.vercel.com/login/oauth/token/introspect \
+            --retry 3 --retry-connrefused --max-time 30 \
+            --data-urlencode "token=$TURBO_TOKEN" \
+            | sed -nE 's/.*"active" *: *(true|false).*/\1/p')
+          if [[ "$active" != "false" ]]; then
+            echo "::error::Expected the access token to be revoked, got active='$active'"
+            exit 1
+          fi
+          echo "Access token was revoked."
