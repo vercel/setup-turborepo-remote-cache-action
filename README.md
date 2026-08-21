@@ -57,7 +57,7 @@ permissions:
 Then, call the action before invoking Turborepo CLI:
 
 ```yaml
-- uses: vercel/setup-turborepo-remote-cache-action@v1.0.0
+- uses: vercel/setup-turborepo-remote-cache-action@v1.1.0
   with:
     team: ${{ vars.TURBO_TEAM }}
 
@@ -100,7 +100,7 @@ its own. Revocation runs at the end of the job whether it succeeded or failed.
 Set it to `false` if you need the token to stay valid past the end of the job:
 
 ```yaml
-- uses: vercel/setup-turborepo-remote-cache-action@v1.0.0
+- uses: vercel/setup-turborepo-remote-cache-action@v1.1.0
   with:
     team: ${{ vars.TURBO_TEAM }}
     revoke: false
